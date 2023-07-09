@@ -1,16 +1,20 @@
 import pygame
 
+import settings
+
 class AlienInvasion():
     def __init__(self):
         pygame.init()
+        #创建设置实例对象
+        self.settings = settings.Settings()
         #设置显示窗口的大小，并且通过set_mode()返回值获得窗口图像的实列对象
-        self.surface = pygame.display.set_mode((500, 300))
+        self.surface = pygame.display.set_mode((self.settings.width, self.settings.height))
         #设置窗口名称
-        pygame.display.set_caption('alien')
+        pygame.display.set_caption(self.settings.game_name)
         #设置主循环标记
         self.run_flag = True
         #设置背景颜色
-        self.bg_color = pygame.Color(160, 160, 160)
+        #self.bg_color = pygame.Color(160, 160, 160)
 
     def run(self):
         '''程序运行的主方法'''
@@ -22,7 +26,7 @@ class AlienInvasion():
             #显示窗口
             pygame.display.flip()
             #通过窗口图像实列对象的fill()方法对背景填充颜色
-            self.surface.fill(self.bg_color)
+            self.surface.fill(self.settings.bg_color)
 
 if __name__ == '__main__':
     ai = AlienInvasion()
