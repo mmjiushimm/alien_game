@@ -36,8 +36,22 @@ class AlienInvasion():
             #比如type是pygame.KEYDOWN，则event会有key这个属性。
             #key属性可以对应具体的某个按键
             elif event.type == pygame.KEYDOWN:
+                #如果事件触发后，这个事件没有中断，则不会重新判断事件触发的条件。
+                #即，右键按下后，如果ship满足右移条件，则会开始右移。
+                #在右移过程中，只要右键不松开，则会持续右移，
+                #即使触碰窗口右边界，也不会判断右移条件，
+                #只有右键松开后，再次按下，才会检查判断条件。
+                #所以，要限制移动范围，需要在计算位移的地方，而非响应按键事件的地方
+                #if event.key == pygame.K_RIGHT and not self.ship.is_right_boundary():
                 if event.key == pygame.K_RIGHT:
-                    self.ship.rect.x += 10
+                    self.ship.move_right = True
+                if event.key == pygame.K_LEFT:
+                    self.ship.move_left = True
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_RIGHT:
+                    self.ship.move_right = False
+                if event.key == pygame.K_LEFT:
+                    self.ship.move_left = False
 
     def _update_screen(self):
         '''更新屏幕显示'''
