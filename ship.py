@@ -1,3 +1,5 @@
+'''def Ship class'''
+
 import os
 import pygame
 
@@ -24,10 +26,10 @@ class Ship:
 
     def draw_ship(self):
         '''显示飞船'''
-        self._update_ship()
+        #self._update_ship()
         self.surface.blit(self.image, self.rect)
 
-    def _update_ship(self):
+    def update_ship(self):
         '''更新位置'''
         if self.move_right and self.rect.right < self.surface.get_rect().right:
         #if self.move_right:
