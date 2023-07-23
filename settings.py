@@ -12,3 +12,11 @@ class Settings:
         self.bg_color = pygame.Color(160, 160, 160)
         #ship速度
         self.ship_speed = 1
+        #bullet width
+        self.bullet_width = 10
+        #bullet height
+        self.bullet_height = 15
+        #bullet speed
+        self.bullet_speed = 1
+        #bullet color
+        self.bullet_color = pygame.Color(0, 0, 0)
