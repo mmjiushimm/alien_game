@@ -1,6 +1,6 @@
 import pygame
 
-import settings, ship
+import settings, ship, bullet
 
 class AlienInvasion():
     def __init__(self):
@@ -18,12 +18,23 @@ class AlienInvasion():
         #self.bg_color = pygame.Color(160, 160, 160)
         #初始化飞船
         self.ship = ship.Ship(self)
+        #创建bullet sprite group对象，统一管理bullet对象
+        self.bullets = pygame.sprite.Group()
         
     def run(self):
         '''程序运行的主循环'''
         while self.run_flag:
             #处理事件
             self._check_events()
+            #把画面中元素的位置更新放在主循环里，而不放在元素的draw()方法里，
+            #是因为考虑到元素的位置变化与显示没有必然联系，
+            #比如元素的位置可以变化，但是不一定非要显示出来。
+            #update ship location
+            self.ship.update_ship()
+            #update bullet location
+            #bullets（sprite group对象）调用update()方法，
+            #相当于这个集合中的每个成员都调用各自的update()方法
+            self.bullets.update()
             #显示
             self._update_screen()
 
@@ -55,6 +66,8 @@ class AlienInvasion():
             self.ship.move_left = True
         if event.key == pygame.K_q:
             self.run_flag = False
+        if event.key == pygame.K_SPACE:
+            self._shoot_bullet()
     
     def _keyup_event(self, event):
         if event.key == pygame.K_RIGHT:
@@ -69,8 +82,15 @@ class AlienInvasion():
         #显示飞船
         self.ship.draw_ship()
         #self.surface.blit(self.ship.image, self.ship.rect)
+        #show bullet
+        for bullet in self.bullets.sprites():
+            bullet.draw_bullet()
         #显示窗口
         pygame.display.flip()
+
+    #后面考虑把这个方法移到Ship类里，作为ship对象的行为
+    def _shoot_bullet(self):
+        self.bullets.add(bullet.Bullet(self))
 
 
 if __name__ == '__main__':
