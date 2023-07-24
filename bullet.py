@@ -13,5 +13,7 @@ class Bullet(Sprite):
     def draw_bullet(self):
         pygame.draw.rect(self.surface, self.settings.bullet_color, self.rect)
     
+    #重写Sprite父类的update()方法
+    #通过调用sprite.group对象的update()，系统会自动调用加入group的每个sprite对象的update()方法
     def update(self):
         self.rect.y -= self.settings.bullet_speed
