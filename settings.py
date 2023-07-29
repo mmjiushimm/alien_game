@@ -20,3 +20,5 @@ class Settings:
         self.bullet_speed = 1
         #bullet color
         self.bullet_color = pygame.Color(0, 0, 0)
+        #max bullet quantity
+        self.bullet_limit = 3

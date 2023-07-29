@@ -26,16 +26,17 @@ class AlienInvasion():
         while self.run_flag:
             #处理事件
             self._check_events()
-            #把画面中元素的位置更新放在主循环里，而不放在元素的draw()方法里，
+
+            #把画面中元素的位置更新和图像显示分开，
             #是因为考虑到元素的位置变化与显示没有必然联系，
             #比如元素的位置可以变化，但是不一定非要显示出来。
             #update ship location
             self.ship.update_ship()
-            #update bullet location
-            #bullets（sprite group对象）调用update()方法，
-            #相当于这个集合中的每个成员都调用各自的update()方法
-            self.bullets.update()
-            #显示
+
+            #更新子弹
+            self._update_bullet()
+
+            #更新显示
             self._update_screen()
 
     def _check_events(self):
@@ -53,6 +54,7 @@ class AlienInvasion():
                 self._keyup_event(event)
 
     def _keydown_event(self, event):
+        '''键盘按下事件'''
         #如果事件触发后，这个事件没有中断，则不会重新判断事件触发的条件。
         #即，右键按下后，如果ship满足右移条件，则会开始右移。
         #在右移过程中，只要右键不松开，则会持续右移，
@@ -70,6 +72,7 @@ class AlienInvasion():
             self._shoot_bullet()
     
     def _keyup_event(self, event):
+        '''键盘松开事件'''
         if event.key == pygame.K_RIGHT:
             self.ship.move_right = False
         if event.key == pygame.K_LEFT:
@@ -79,18 +82,40 @@ class AlienInvasion():
         '''更新屏幕显示'''
         #通过窗口图像实列对象的fill()方法对背景填充颜色
         self.surface.fill(self.settings.bg_color)
+        
         #显示飞船
         self.ship.draw_ship()
         #self.surface.blit(self.ship.image, self.ship.rect)
+        
         #show bullet
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()
+        #删除超出范围的bullet
+        self._remove_bullet()
+        print(len(self.bullets))
         #显示窗口
         pygame.display.flip()
 
     #后面考虑把这个方法移到Ship类里，作为ship对象的行为
     def _shoot_bullet(self):
-        self.bullets.add(bullet.Bullet(self))
+        '''发射子弹'''
+        if len(self.bullets) < self.settings.bullet_limit:
+            self.bullets.add(bullet.Bullet(self))
+    
+    def _remove_bullet(self):
+        '''删除超出范围的bullet'''
+        for bullet in self.bullets.sprites():
+            if bullet.rect.bottom < 0:
+                self.bullets.remove(bullet)
+    
+    def _update_bullet(self):
+        '''更新子弹位置和有效的数量'''
+        #update bullet location
+        #bullets（sprite group对象）调用update()方法，
+        #相当于这个集合中的每个成员都调用各自的update()方法
+        self.bullets.update()
+
+        self._remove_bullet()
 
 
 if __name__ == '__main__':
