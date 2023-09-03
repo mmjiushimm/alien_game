@@ -8,7 +8,7 @@ class Bullet(Sprite):
         self.settings = ai.settings
         self.surface = ai.surface
         self.rect = pygame.Rect(0, 0, self.settings.bullet_width, self.settings.bullet_height)
-        self.rect.midtop = ai.ship.rect.midtop
+        self.rect.midtop = ai._ship.rect.midtop
 
     def draw_bullet(self):
         pygame.draw.rect(self.surface, self.settings.bullet_color, self.rect)

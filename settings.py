@@ -22,3 +22,11 @@ class Settings:
         self.bullet_color = pygame.Color(0, 0, 0)
         #max bullet quantity
         self.bullet_limit = 3
+        #alien speed
+        self.alien_speed = 0.5
+        #alien x margin
+        self.alien_x_margin = 10
+        #alien y margin
+        self.alien_y_margin = 10
+        #screen x margin
+        self.screen_x_margin = 100

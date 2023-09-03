@@ -1,6 +1,6 @@
 import pygame
 
-import settings, ship, bullet
+import settings, ship, bullet, alien
 
 class AlienInvasion():
     def __init__(self):
@@ -13,17 +13,25 @@ class AlienInvasion():
         #设置窗口名称
         pygame.display.set_caption(self.settings.game_name)
         #设置主循环标记
-        self.run_flag = True
+        self._run_flag = True
         #设置背景颜色
         #self.bg_color = pygame.Color(160, 160, 160)
         #初始化飞船
-        self.ship = ship.Ship(self)
+        self._ship = ship.Ship(self)
         #创建bullet sprite group对象，统一管理bullet对象
-        self.bullets = pygame.sprite.Group()
+        self._bullets = pygame.sprite.Group()
+        #init alien
+        self._aliens = pygame.sprite.Group()
+        #alien左边界
+        self._alien_left_boundary = 0
+        #alien右边界
+        self._alien_right_boundary = 0
+        #alien移动标记
+        self._alien_move_flag = True
         
     def run(self):
         '''程序运行的主循环'''
-        while self.run_flag:
+        while self._run_flag:
             #处理事件
             self._check_events()
 
@@ -31,10 +39,13 @@ class AlienInvasion():
             #是因为考虑到元素的位置变化与显示没有必然联系，
             #比如元素的位置可以变化，但是不一定非要显示出来。
             #update ship location
-            self.ship.update_ship()
+            self._ship.update_ship()
 
             #更新子弹
             self._update_bullet()
+
+            #更新alien
+            self._update_alien()
 
             #更新显示
             self._update_screen()
@@ -44,7 +55,7 @@ class AlienInvasion():
         for event in pygame.event.get():
             #窗口退出事件发生时，主循环结束
             if event.type == pygame.QUIT:
-                self.run_flag = False
+                self._run_flag = False
             #event对象会根据type的值（即根据不同的event类型）有不同的属性
             #比如type是pygame.KEYDOWN，则event会有key这个属性。
             #key属性可以对应具体的某个按键
@@ -63,20 +74,20 @@ class AlienInvasion():
         #所以，要限制移动范围，需要在计算位移的地方，而非响应按键事件的地方
         #if event.key == pygame.K_RIGHT and not self.ship.is_right_boundary():
         if event.key == pygame.K_RIGHT:
-            self.ship.move_right = True
+            self._ship.move_right = True
         if event.key == pygame.K_LEFT:
-            self.ship.move_left = True
+            self._ship.move_left = True
         if event.key == pygame.K_q:
-            self.run_flag = False
+            self._run_flag = False
         if event.key == pygame.K_SPACE:
             self._shoot_bullet()
     
     def _keyup_event(self, event):
         '''键盘松开事件'''
         if event.key == pygame.K_RIGHT:
-            self.ship.move_right = False
+            self._ship.move_right = False
         if event.key == pygame.K_LEFT:
-            self.ship.move_left = False
+            self._ship.move_left = False
 
     def _update_screen(self):
         '''更新屏幕显示'''
@@ -84,38 +95,114 @@ class AlienInvasion():
         self.surface.fill(self.settings.bg_color)
         
         #显示飞船
-        self.ship.draw_ship()
+        self._ship.draw_ship()
         #self.surface.blit(self.ship.image, self.ship.rect)
         
         #show bullet
-        for bullet in self.bullets.sprites():
+        for bullet in self._bullets.sprites():
             bullet.draw_bullet()
-        #删除超出范围的bullet
-        self._remove_bullet()
-        print(len(self.bullets))
+        
+        #show alien
+        for alien in self._aliens.sprites():
+            alien.draw_alien()
+
         #显示窗口
         pygame.display.flip()
 
     #后面考虑把这个方法移到Ship类里，作为ship对象的行为
     def _shoot_bullet(self):
         '''发射子弹'''
-        if len(self.bullets) < self.settings.bullet_limit:
-            self.bullets.add(bullet.Bullet(self))
+        if len(self._bullets) < self.settings.bullet_limit:
+            self._bullets.add(bullet.Bullet(self))
     
     def _remove_bullet(self):
         '''删除超出范围的bullet'''
-        for bullet in self.bullets.sprites():
+        for bullet in self._bullets.sprites():
             if bullet.rect.bottom < 0:
-                self.bullets.remove(bullet)
+                self._bullets.remove(bullet)
+                print(len(self._bullets.sprites()))
     
     def _update_bullet(self):
         '''更新子弹位置和有效的数量'''
         #update bullet location
         #bullets（sprite group对象）调用update()方法，
         #相当于这个集合中的每个成员都调用各自的update()方法
-        self.bullets.update()
+        self._bullets.update()
+        if len(self._bullets.sprites()):
+            self._remove_bullet()
+    
+    def _update_alien(self):
+        '''更新alien的位置和有效数量'''
+        #self.alien.update()
+        if not len(self._aliens):
+            self._creat_aliens()
+        else:
+            #self._aliens.update()
+            self._move_aliens()
+            self._remove_aliens()
+    
+    def _creat_aliens(self):
+        '''创建alien群'''
+        new_alien = alien.Alien(self)
+        #计算屏幕宽度可以放alien的数量，还要考虑两个alien之间的margin
+        #下一行末尾的反斜线\用于代码行换行
+        n = (self.surface.get_rect().width - 2 * self.settings.screen_x_margin) // \
+        (new_alien.rect.width + self.settings.alien_x_margin)
+        for i in range(n):
+            new_alien = alien.Alien(self)
+            new_alien.set_aliens_origin(self.settings.screen_x_margin + i * (new_alien.rect.width + self.settings.alien_x_margin))
+            self._aliens.add(new_alien)
+        self._alien_left_boundary = self.settings.screen_x_margin
+        self._alien_right_boundary = self.settings.screen_x_margin + n * (new_alien.rect.width + self.settings.alien_x_margin) - self.settings.alien_x_margin
+        """ aliens_list = list(self._aliens.sprites())
+        self._alien_left_boundary = aliens_list[0].rect.left
+        self._alien_right_boundary = aliens_list[-1].rect.right """
+    
+    def _move_aliens(self):
+        screen_right = self.surface.get_rect().right
+        screen_left = self.surface.get_rect().left
+        if(self._alien_move_flag):
+            if(screen_right - self._alien_right_boundary > self.settings.alien_x_margin):
+                self._aliens_fly(0)
+            else:
+                self._aliens_fly(2)
+                self._alien_move_flag = False
+        else:
+            if(self._alien_left_boundary - screen_left > self.settings.alien_x_margin):
+                self._aliens_fly(1)
+            else:
+                self._aliens_fly(2)
+                self._alien_move_flag = True
+    
+    def _aliens_fly(self, i):
+        #右移
+        if i == 0:
+            for alien in self._aliens:
+                alien.x += self.settings.alien_speed
+            self._alien_right_boundary += self.settings.alien_speed
+            self._alien_left_boundary += self.settings.alien_speed
 
-        self._remove_bullet()
+        #左移
+        if i == 1:
+            for alien in self._aliens:
+                alien.x -= self.settings.alien_speed
+            self._alien_right_boundary -= self.settings.alien_speed
+            self._alien_left_boundary -= self.settings.alien_speed
+
+        #下移
+        if i == 2:
+            for alien in self._aliens:
+                alien.y += 50 * self.settings.alien_speed
+
+
+
+    def _remove_aliens(self):
+        '''删除无效的aliens'''
+        for alien in self._aliens.sprites():
+            if alien.rect.top > self.surface.get_rect().bottom:
+                self._aliens.remove(alien)
+                print(len(self._aliens.sprites()))
+
 
 
 if __name__ == '__main__':
